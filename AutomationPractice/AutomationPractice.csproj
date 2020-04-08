@@ -49,7 +49,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseTest.cs" />
+    <Compile Include="PageObject\Frame.cs" />
+    <Compile Include="PageObject\MainPage.cs" />
+    <Compile Include="PageObject\Order.cs" />
+    <Compile Include="PageObject\PageObjectBase.cs" />
+    <Compile Include="PageObject\ProductPage.cs" />
+    <Compile Include="Tests\BaseTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

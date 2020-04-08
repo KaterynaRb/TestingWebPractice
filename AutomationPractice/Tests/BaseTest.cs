@@ -2,112 +2,68 @@
 using System;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Interactions;
+using AutomationPractice.PageObject;
 
 namespace AutomationPractice
 {
     [TestFixture]
     public class BaseTest
     {
-        private static readonly string url = /*TestContext.Parameters[url] */"http://automationpractice.com/index.php";
+        private static readonly string url = "http://automationpractice.com/index.php";
         private readonly IWebDriver driver;
-
+        
         public BaseTest()
         {
             driver = new ChromeDriver();
             driver.Manage().Window.Maximize();
-            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(3);
             driver.Navigate().GoToUrl(url);
         }
 
-        [Test]
-        public void Test1()
+        [OneTimeTearDown]
+        public void OneTimeTearDown() => driver.Quit();
+
+        [TestCase]
+        public void TestingImages()
         {
-            //driver.FindElement(By.Id("searchbox")).Click();
-            //driver.FindElement(By.Id("search_query_top")).SendKeys("dress");
-            //driver.FindElement(By.Name("submit_search")).Click();
-            //driver.FindElement(By.Id("grid")).Click();
+            MainPage mainPage = new MainPage(driver);
 
-            driver.FindElement(By.XPath("//ul[@id='homefeatured']" +
-                "//li[@class='ajax_block_product col-xs-12 col-sm-4 col-md-3 first-in-line first-item-of-tablet-line first-item-of-mobile-line']" +
-                "//a[@class='product_img_link']"))
-                .Click();
+            Frame frame = mainPage.QuickViewImg();
 
-            //WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            //WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
 
-            //driver.FindElement(By.XPath("//body[@id='index']//body[@id='product']//form[@id='buy_block']//p[@id='add_to_cart']//button[@class='exclusive']")).Submit();
-
-            IWebElement detailFrame = driver.FindElement(By.ClassName("fancybox-iframe"));
-            driver.SwitchTo().Frame(detailFrame);
-
-            Actions action = new Actions(driver);
-            action.MoveToElement(driver.FindElement(By.Id("thumb_1"))).Perform();
-            action.MoveToElement(driver.FindElement(By.Id("thumb_2"))).Perform();
-            action.MoveToElement(driver.FindElement(By.Id("thumb_3"))).Perform();
-            action.MoveToElement(driver.FindElement(By.Id("thumb_4"))).Perform();
-
-            driver.SwitchTo().DefaultContent();
-
-            driver.FindElement(By.ClassName("fancybox-close")).Click();
+            mainPage.SwitchFrame();
+            mainPage.HoverImagesOnQuickView();
+            frame.SwitchToDefaultContent();
+            mainPage.CloseQuickViewImg();
         }
 
-
-        [Test]
-        public void Test2()
+        [TestCase]
+        public void TestingCart()
         {
-            driver.FindElement(By.ClassName("blockbestsellers")).Click();
+            MainPage mainPage = new MainPage(driver);
+            mainPage.Bestsellers();
+            ProductPage productPage = mainPage.OpenProductToBuy();
+            productPage.PriceToDouble();
+            productPage.AddToCart();
+            productPage.CloseLayerCart();
+            productPage.Home();
 
-            driver.FindElement(By.XPath("//ul[@id='blockbestsellers']" +
-                "//li[@class='ajax_block_product col-xs-12 col-sm-4 col-md-3 first-in-line first-item-of-tablet-line first-item-of-mobile-line']" +
-                "//a[@class='product-name']")).Click();
+            Frame frame = mainPage.OpenImageToBuy();
+            mainPage.SwitchFrame();
+            frame.PriceToDouble();
+            frame.AddToCart();
+            frame.SwitchToDefaultContent();
 
-            double firstPrice;
-            string price1 = driver.FindElement(By.Id("our_price_display")).Text.Substring(1).Replace('.', ',');
-            firstPrice = Convert.ToDouble(price1);
-
-
-            driver.FindElement(By.XPath("//p[@id='add_to_cart']//button[@class='exclusive']")).Submit();
-            
-            driver.FindElement(By.XPath("//div[@id='layer_cart']//span[@class='cross']")).Click();
-            
-            //Actions action = new Actions(driver);
-            //action.MoveToElement(driver.FindElement(By.XPath("//header[@id='header']//a[@title='View my shopping cart']"))).Perform();
-
-            
-            driver.FindElement(By.XPath("//div[@id='columns']//a[@class='home']")).Click();
-            
-
-            driver.FindElement(By.XPath("//ul[@id='homefeatured']" +
-                "//li[@class='ajax_block_product col-xs-12 col-sm-4 col-md-3 last-item-of-mobile-line']" +
-                "//a[@class='product_img_link']")).Click();
-
-            IWebElement detailFrame = driver.FindElement(By.ClassName("fancybox-iframe"));
-            driver.SwitchTo().Frame(detailFrame);
-
-            double secondPrice;
-            string price2 = driver.FindElement(By.Id("our_price_display")).Text.Substring(1).Replace('.', ',');
-            secondPrice = Convert.ToDouble(price2);
-
-            driver.FindElement(By.XPath("//p[@id='add_to_cart']//button[@name='Submit']")).Submit();
-
-            driver.SwitchTo().DefaultContent();
-            driver.FindElement(By.XPath("//div[@id='layer_cart']//a[@title='Proceed to checkout']")).Click();
-
-            double totalShipping;
-            string shipping = driver.FindElement(By.Id("total_shipping")).Text.Substring(1).Replace('.', ',');
-            totalShipping = Convert.ToDouble(shipping);
-
-            double totalPrice;
-            string priseSum = driver.FindElement(By.Id("total_price")).Text.Substring(1).Replace('.', ',');
-            totalPrice = Convert.ToDouble(priseSum);
+            Order order = mainPage.ProceedToCheckout();
+            order.ShippingToDouble();
+            order.TotalToDouble();
 
             //Test Failed
-            //Assert.AreEqual(firstPrice + secondPrice, totalPrice);
+            //Assert.AreEqual(firstPrice, totalPrice);
 
             //Test Passed
-            Assert.AreEqual(totalShipping + firstPrice + secondPrice, totalPrice);
-
-
+            Assert.AreEqual(order.shippingPrice + productPage.price + frame.price, order.totalPrice);
         }
     }
 }
